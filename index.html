@@ -512,7 +512,6 @@
         <div class="sobre-text">
           <h3>Bienvenida a Estetic Val</h3>
           <p class="nit-num">NIT (1025528231-4)</p>
-          <!-- ✅ CAMBIO 1: 15 años → 7 años -->
           <p>Soy una profesional <em>apasionada</em> por el mundo de la estética y la belleza, con más de 7 años de experiencia transformando vidas a través de la educación y el empoderamiento profesional.</p>
           <p>Mi misión es compartir mis conocimientos y técnicas especializadas para ayudarte a destacar en esta industria en constante evolución. Cada curso está diseñado con dedicación, combinando teoría de vanguardia con práctica intensiva.</p>
           <p>Juntas, crearemos tu <em>camino hacia el éxito profesional</em> en el fascinante mundo de la belleza y el cuidado estético.</p>
@@ -959,7 +958,7 @@
         <div class="modal-section">
           <h4>Qué Incluye el Curso</h4>
           <div class="incluye-grid">
-            <div class="incluye-item"><span class="check"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" width="15" height="15"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg></span> Certificado profesional al finalizar</div>
+            <div class="incluye-item"><span class="check"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" width="15" height="15"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg></span> Certificado de participación al finalizar</div>
             <div class="incluye-item"><span class="check"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" width="15" height="15"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg></span> Práctica con modelos reales</div>
             <div class="incluye-item"><span class="check"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" width="15" height="15"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg></span> Seguimiento personalizado</div>
             <div class="incluye-item"><span class="check"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" width="15" height="15"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg></span> Grupos reducidos para mejor aprendizaje</div>
@@ -972,7 +971,6 @@
             <p>Este curso está diseñado para brindarte todas las herramientas y conocimientos necesarios para convertirte en un profesional destacado en el área. Aprenderás desde los fundamentos teóricos hasta la práctica avanzada con técnicas de última generación.</p>
             <p>Contarás con mi acompañamiento personalizado durante todo el proceso de aprendizaje, asegurando que domines cada técnica antes de avanzar. Al finalizar, estarás completamente preparada para ofrecer servicios profesionales de alta calidad.</p>
           </div>
-          <!-- ✅ CAMBIO 3: Marco legal agregado al final del modal -->
           <div class="ley-box">
             <div class="ley-box-header">
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" width="16" height="16">
@@ -1117,7 +1115,6 @@
           map[entryId].uids.add(uid);
         }
       });
-      // Convert Sets to arrays and count
       const finalMap = {};
       Object.entries(map).forEach(([k, v]) => {
         finalMap[k] = { count: v.uids.size, uids: [...v.uids] };
@@ -1442,13 +1439,11 @@
       });
     };
 
-    /* ══ USER ID ══ */
     try { if (!localStorage.getItem('ev_uid')) localStorage.setItem('ev_uid','u_'+Math.random().toString(36).slice(2)); window._userId = localStorage.getItem('ev_uid'); } catch { window._userId = 'u_'+Math.random().toString(36).slice(2); }
 
     window._likesMap   = {};
     window._commentsMap = {};
 
-    /* ✅ CAMBIO 2: Sistema de likes corregido — toggle real (un like por usuario, quita si ya dio like) */
     window.applyLikesFromFirestore = function() {
       const map = window._likesMap || {};
       const uid = window._userId;
@@ -1464,7 +1459,6 @@
       });
     };
 
-    // localStorage para likes (estado local por dispositivo)
     function getLikeState(entryId) {
       try { return JSON.parse(localStorage.getItem('ev_liked')||'{}')[entryId] || false; } catch { return false; }
     }
@@ -1481,33 +1475,24 @@
       const btn  = document.getElementById('like-btn-'+entryId);
       const cEl  = document.getElementById('like-count-'+entryId);
       if (!btn || !cEl) return;
-
-      // Determinar estado actual
       const fbEntry  = (window._likesMap||{})[entryId];
       const fbLiked  = fbEntry ? fbEntry.uids.includes(uid) : false;
       const lsLiked  = getLikeState(entryId);
       const wasLiked = fbEntry ? fbLiked : lsLiked;
       const newLiked = !wasLiked;
-
       const cur = parseInt(cEl.textContent||'0') || 0;
-
-      // Optimistic UI
       btn.classList.toggle('liked', newLiked);
       const svg = btn.querySelector('svg');
       if (svg) svg.setAttribute('fill', newLiked ? 'currentColor' : 'none');
       cEl.textContent = (newLiked ? cur + 1 : Math.max(0, cur - 1)) || '';
       if (newLiked) { btn.classList.add('like-anim'); setTimeout(() => btn.classList.remove('like-anim'), 400); }
-
-      // Guardar estado local
       setLikeState(entryId, newLiked);
-
-      // Guardar en Firestore: action 'like' o 'unlike'
       if (window._fbReady) {
         try {
           await window._fbAddDoc(window._fbCollection(window._db, 'ev_likes'), {
             entryId, uid, action: newLiked ? 'like' : 'unlike', timestamp: new Date()
           });
-        } catch(e) { /* sin permisos aún — localStorage es suficiente */ }
+        } catch(e) {}
       }
     }
 
@@ -1526,7 +1511,6 @@
       });
     };
 
-    /* ══ NAME MODAL ══ */
     let _nameResolve = null;
     function askName() {
       return new Promise(resolve => {
@@ -1549,7 +1533,6 @@
       if (_nameResolve) { _nameResolve(val); _nameResolve = null; }
     }
 
-    /* ══ COMMENTS ══ */
     window._currentCommentEntry = null;
 
     function getLocalComments(entryId) { try { return JSON.parse(localStorage.getItem('ev_cm_'+entryId)||'[]'); } catch { return []; } }
@@ -1605,7 +1588,6 @@
       }
     }
 
-    /* ══ DELETE ══ */
     const ADMIN_PASS = '101311';
     let _deleteEntryId = null;
 
